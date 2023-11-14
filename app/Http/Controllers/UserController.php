@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+use App\Models\User;
+class UserController extends Controller
+{
+    function login(Request $req)
+    {
+        $user=User::where(['email'=>$req->email])->first();
+        if(!$user || !Hash::check($req->password, $user->password)){
+            return "Email or Password is not matched";
+        }
+        else{
+            $req->session()->put('user',$user);
+            return redirect('/');
+        }
+    }
+
+
+    function register(Request $req)
+    {
+        $req->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|ends_with:@gmail.com|unique:users', // Ensure the email ends with "@gmail.com" and is unique in the 'users' table
+            'password' => 'required|min:6',
+        ]);
+
+
+
+        $user = new User;
+        $user->name = $req->name;
+        $user->email = $req->email;
+        $user->password = Hash::make($req->password);
+        $user->save();
+    
+        return redirect("/login");
+    }
+    
+}
